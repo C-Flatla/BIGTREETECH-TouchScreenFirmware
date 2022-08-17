@@ -25,11 +25,19 @@ typedef enum
   VALUE_STRING,
 } VALUE_TYPE;
 
+typedef enum
+{
+  COLD = 0,
+  SETTLING,
+  HEATED,
+} NOZZLE_STATUS;
+
 extern SCROLL scrollLine;
 
-extern uint8_t currentTool;
-extern uint8_t currentFan;
-extern uint8_t currentSpeedID;
+extern uint8_t currentTool;     // current hotend index
+extern uint8_t currentBCIndex;  // current bed/chamber index
+extern uint8_t currentFan;      // current fan index
+extern uint8_t currentSpeedID;  // current speed/flow index
 
 extern const ITEM itemTool[MAX_HEATER_COUNT];
 extern const ITEM itemDegreeSteps[ITEM_DEGREE_NUM];
@@ -52,16 +60,20 @@ extern const uint16_t iconToggle[ITEM_TOGGLE_NUM];
 // Check if next screen update is due
 bool nextScreenUpdate(uint32_t duration);
 
+#ifdef FRIENDLY_Z_OFFSET_LANGUAGE
+  void invertZAxisIcons(MENUITEMS * menuItems);
+
+  #define  INVERT_Z_AXIS_ICONS(menuItemsPtr) invertZAxisIcons(menuItemsPtr)
+#else
+  #define  INVERT_Z_AXIS_ICONS(menuItemsPtr)
+#endif
+
 void drawBorder(const GUI_RECT *rect, uint16_t color, uint16_t edgeDistance);
 
 void drawBackground(const GUI_RECT *rect, uint16_t bgColor, uint16_t edgeDistance);
 
-void drawStandardValue(const GUI_RECT *rect, VALUE_TYPE valType, const void *val, bool largeFont,
+void drawStandardValue(const GUI_RECT *rect, VALUE_TYPE valType, const void *val, uint16_t font,
                        uint16_t color, uint16_t bgColor, uint16_t edgeDistance, bool clearBgColor);
-
-bool warmupTemperature(uint8_t toolIndex, void (* callback)(void));
-
-void cooldownTemperature(void);
 
 // Show/draw temperature in a standard menu
 void temperatureReDraw(uint8_t toolIndex, int16_t * temp, bool skipHeader);
@@ -80,6 +92,16 @@ int32_t editIntValue(int32_t minValue, int32_t maxValue, int32_t resetValue, int
 
 // Edit a float value in a standard menu
 float editFloatValue(float minValue, float maxValue, float resetValue, float value);
+
+NOZZLE_STATUS warmupNozzle(uint8_t toolIndex, void (* callback)(void));
+
+#ifdef SAFETY_ALERT
+  void cooldownTemperature(void);
+
+  #define COOLDOWN_TEMPERATURE() cooldownTemperature()
+#else
+  #define COOLDOWN_TEMPERATURE()
+#endif
 
 #ifdef __cplusplus
 }
